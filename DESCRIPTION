@@ -4,7 +4,7 @@ Title: Handle Norwegian List
 Version: 0.1.0
 Author: Agne Larsson
 Maintainer: Agne Larsson <agnel@kth.se>
-Description: Functions to transpose, write, read and otherwise handle the so called Norwegian List of publication channelse
+Description: Functions to transpose, write, read and otherwise handle the so called Norwegian List of publication channels
     https://kanalregister.hkdir.no/publiseringskanaler/Forside
 License: file LICENSE
 Encoding: UTF-8
