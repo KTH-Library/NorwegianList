@@ -62,8 +62,8 @@ write_norwegian_list_csv <- function(data, location, to_s3 = FALSE) {
     s3write_using(data$journals, write_csv, object = 'norwegian_list_journals.csv')
     s3write_using(data$publishers, write_csv, object = 'norwegian_list_publishers.csv')
   } else {
-    write_csv(data$journals, file.path(location, 'norwegian_list_journals.parquet'))
-    write_csv(data$publishers, file.path(location, 'norwegian_list_publishers.parquet'))
+    write_csv(data$journals, file.path(location, 'norwegian_list_journals.csv'))
+    write_csv(data$publishers, file.path(location, 'norwegian_list_publishers.csv'))
   }
 }
 
@@ -82,7 +82,7 @@ write_norwegian_list_parquet <- function(data, location, to_s3 = FALSE) {
     s3write_using(data$journals, write_parquet, object = 'norwegian_list_journals.parquet', bucket = location)
     s3write_using(data$publishers, write_parquet, object = 'norwegian_list_publishers.parquet', bucket = location)
   } else {
-    write_parquet(data$journals, file.path(location, 'norwegian_list_journals.csv'))
-    write_parquet(data$publishers, file.path(location, 'norwegian_list_publishers.csv'))
+    write_parquet(data$journals, file.path(location, 'norwegian_list_journals.parquet'))
+    write_parquet(data$publishers, file.path(location, 'norwegian_list_publishers.parquet'))
   }
 }
