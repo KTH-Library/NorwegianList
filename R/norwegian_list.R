@@ -59,8 +59,8 @@ transpose_norwegian_list <- function(journals_file, publishers_file) {
 write_norwegian_list_csv <- function(data, location, to_s3 = FALSE) {
 
   if (to_s3) {
-    s3write_using(data$journals, write_csv, object = 'norwegian_list_journals.csv')
-    s3write_using(data$publishers, write_csv, object = 'norwegian_list_publishers.csv')
+    s3write_using(data$journals, write_csv, object = 'norwegian_list_journals.csv', bucket = location)
+    s3write_using(data$publishers, write_csv, object = 'norwegian_list_publishers.csv', bucket = location)
   } else {
     write_csv(data$journals, file.path(location, 'norwegian_list_journals.csv'))
     write_csv(data$publishers, file.path(location, 'norwegian_list_publishers.csv'))
