@@ -55,6 +55,7 @@ transpose_norwegian_list <- function(journals_file, publishers_file) {
 #' @param location a local path or an existing S3 bucket
 #' @param to_s3 set to TRUE to write to S3 storage (default FALSE)
 #' @importFrom aws.s3 s3write_using
+#' @importFrom readr write_csv
 #' @export
 write_norwegian_list_csv <- function(data, location, to_s3 = FALSE) {
 
@@ -73,8 +74,8 @@ write_norwegian_list_csv <- function(data, location, to_s3 = FALSE) {
 #' @param data named list of 2 (journals, publishers)
 #' @param location a local path or an existing S3 bucket
 #' @param to_s3 set to TRUE to write to S3 storage (default FALSE)
-#' @importFrom arrow write_parquet
 #' @importFrom aws.s3 s3write_using
+#' @importFrom arrow write_parquet
 #' @export
 write_norwegian_list_parquet <- function(data, location, to_s3 = FALSE) {
 
@@ -86,3 +87,45 @@ write_norwegian_list_parquet <- function(data, location, to_s3 = FALSE) {
     write_parquet(data$publishers, file.path(location, 'norwegian_list_publishers.parquet'))
   }
 }
+
+#' Read csv files norwegian_journals, norwegian_publishers
+#'
+#' @param location a local path or an existing S3 bucket
+#' @param from_s3 set to TRUE to read from S3 storage (default FALSE)
+#' @importFrom aws.s3 s3read_using
+#' @importFrom readr read_csv
+#' @export
+read_norwegian_list_csv <- function(location, from_s3 = FALSE) {
+
+  if (from_s3) {
+    journals <- s3read_using(read_csv, object = 'norwegian_list_journals.csv', bucket = location)
+    publishers <- s3read_using(read_csv, object = 'norwegian_list_publishers.csv', bucket = location)
+  } else {
+    journals <- read_csv(file.path(location, 'norwegian_list_journals.csv'))
+    publishers <- read_csv(file.path(location, 'norwegian_list_publishers.csv'))
+  }
+  list(journals = journals,
+       publishers = publishers)
+}
+
+
+#' Read parquet files norwegian_journals, norwegian_publishers
+#'
+#' @param location a local path or an existing S3 bucket
+#' @param from_s3 set to TRUE to read from S3 storage (default FALSE)
+#' @importFrom aws.s3 s3write_using
+#' @importFrom arrow read_parquet
+#' @export
+read_norwegian_list_parquet <- function(location, from_s3 = FALSE) {
+
+  if (from_s3) {
+    journals <- s3read_using(read_parquet, object = 'norwegian_list_journals.parquet', bucket = location)
+    publishers <- s3read_using(read_parquet, object = 'norwegian_list_publishers.parquet', bucket = location)
+  } else {
+    journals <- read_parquet(file.path(location, 'norwegian_list_journals.parquet'))
+    publishers <- read_parquet(file.path(location, 'norwegian_list_publishers.parquet'))
+  }
+  list(journals = journals,
+       publishers = publishers)
+}
+
