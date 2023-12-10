@@ -1,5 +1,11 @@
 subg <- function(x, pattern, replacement, ...) { gsub(pattern, replacement, x, ...) }
 
+separate_identificator <- function(pubs, identificator = "ISBN", keep = "PID", sep = ";"){
+  pubs |>
+    select({{keep}}, {{identificator}}) |>
+    separate_longer_delim({{identificator}}, delim = sep)
+}
+
 clean_issn <- function(x) trimws(tolower((gsub("[^0-9xX]", "", x))))
 
 # Make journal titles more likely to match
