@@ -1,4 +1,61 @@
-#' Transpose Norwegian list of publication channels
+#' Transpose Norwegian journals list
+#'
+#' @param journals_file path to csv file with data on journals
+#' @import dplyr tidyr readr
+#' @returns tibble
+#' @export
+transpose_norwegian_list <- function(journals_file) {
+
+  read_delim(journals_file,
+           delim = ";",
+           show_col_types = FALSE) |>
+  mutate(across(starts_with("Nivå"), as.character),
+         across(ends_with("tittel"), trimws)) |>
+  dplyr::rename(Title_original = `Original tittel`,
+                Title_international = `Internasjonal tittel`,
+                issn = `Print ISSN`,
+                issn_online = `Online ISSN`)
+
+  suppressWarnings(
+    journals |>
+      select(tidsskrift_id:issn_online, starts_with("Nivå")) |>
+      pivot_longer(starts_with("Nivå"),
+                   names_to = "Year") |>
+      mutate(Year = as.integer(gsub("Nivå ", "", Year)),
+             Level = if_else(value %in% c(0, 1, 2), as.integer(value), NA_integer_)) |>
+      select(-value)
+  )
+}
+
+#' Transpose Norwegian publishers list
+#'
+#' @param publishers_file path to csv file with data on journals
+#' @import dplyr tidyr readr
+#' @returns tibble
+#' @export
+transpose_norwegian_list <- function(publishers_file) {
+
+  publishers <- read_delim(publishers_file,
+                           delim = ";",
+                           show_col_types = FALSE) |>
+    mutate(across(starts_with("Nivå"), as.character),
+           across(ends_with("tittel"), trimws)) |>
+    dplyr::rename(Title_original = `Original tittel`,
+                  Title_international = `Internasjonal tittel`,
+                  isbn_prefix = `ISBN-prefiks`)
+
+  suppressWarnings(
+    publishers |>
+      select(forlag_id:isbn_prefix, starts_with("Nivå")) |>
+      pivot_longer(starts_with("Nivå"),
+                   names_to = "Year") |>
+      mutate(Year = as.integer(gsub("Nivå ", "", Year)),
+             Level = if_else(value %in% c(0, 1, 2), as.integer(value), NA_integer_)) |>
+      select(-value)
+  )
+}
+
+#' Transpose Norwegian lists of publication channels
 #'
 #' @param journals_file path to csv file with data on journals
 #' @param publishers_file path to csv file with data on publishers
@@ -7,45 +64,9 @@
 #' @export
 transpose_norwegian_list <- function(journals_file, publishers_file) {
 
-  journals <- read_delim(journals_file,
-                         delim = ";",
-                         show_col_types = FALSE) |>
-    mutate(across(starts_with("Nivå"), as.character),
-           across(ends_with("tittel"), trimws)) |>
-    dplyr::rename(Title_original = `Original tittel`,
-           Title_international = `Internasjonal tittel`,
-           issn = `Print ISSN`,
-           issn_online = `Online ISSN`)
+  journals <- transpose_journals_list(journals_file)
 
-
-  suppressWarnings(
-    journals_transposed <- journals |>
-      select(tidsskrift_id:issn_online, starts_with("Nivå")) |>
-      pivot_longer(starts_with("Nivå"),
-                   names_to = "Year") |>
-      mutate(Year = as.integer(gsub("Nivå ", "", Year)),
-             Level = if_else(value %in% c(0, 1, 2), as.integer(value), NA_integer_)) |>
-      select(-value)
-    )
-
-  publishers <- read_delim(publishers_file,
-                           delim = ";",
-                           show_col_types = FALSE) |>
-    mutate(across(starts_with("Nivå"), as.character),
-           across(ends_with("tittel"), trimws)) |>
-    dplyr::rename(Title_original = `Original tittel`,
-           Title_international = `Internasjonal tittel`,
-           isbn_prefix = `ISBN-prefiks`)
-
-  suppressWarnings(
-    publishers_transposed <- publishers |>
-      select(forlag_id:isbn_prefix, starts_with("Nivå")) |>
-      pivot_longer(starts_with("Nivå"),
-                   names_to = "Year") |>
-      mutate(Year = as.integer(gsub("Nivå ", "", Year)),
-             Level = if_else(value %in% c(0, 1, 2), as.integer(value), NA_integer_)) |>
-      select(-value)
-    )
+  publishers <- transpose_publishers_list(publishers_file)
 
   list(journals = journals_transposed,
        publishers = publishers_transposed)
@@ -130,4 +151,3 @@ read_norwegian_list_parquet <- function(location, from_s3 = FALSE) {
   list(journals = journals,
        publishers = publishers)
 }
-

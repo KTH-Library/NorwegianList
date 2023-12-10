@@ -2,8 +2,12 @@
 % Please edit documentation in R/norwegian_list.R
 \name{transpose_norwegian_list}
 \alias{transpose_norwegian_list}
-\title{Transpose Norwegian list of publication channels}
+\title{Transpose Norwegian journals list}
 \usage{
+transpose_norwegian_list(journals_file, publishers_file)
+
+transpose_norwegian_list(journals_file, publishers_file)
+
 transpose_norwegian_list(journals_file, publishers_file)
 }
 \arguments{
@@ -12,8 +16,16 @@ transpose_norwegian_list(journals_file, publishers_file)
 \item{publishers_file}{path to csv file with data on publishers}
 }
 \value{
+tibble
+
+tibble
+
 list of 2 tibbles
 }
 \description{
-Transpose Norwegian list of publication channels
+Transpose Norwegian journals list
+
+Transpose Norwegian publishers list
+
+Transpose Norwegian lists of publication channels
 }
