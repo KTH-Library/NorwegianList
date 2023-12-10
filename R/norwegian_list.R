@@ -10,11 +10,12 @@ transpose_norwegian_list <- function(journals_file, publishers_file) {
   journals <- read_delim(journals_file,
                          delim = ";",
                          show_col_types = FALSE) |>
-    mutate(across(starts_with("Nivå"), as.character)) |>
+    mutate(across(starts_with("Nivå"), as.character),
+           across(ends_with("tittel"), trimws)) |>
     dplyr::rename(Title_original = `Original tittel`,
            Title_international = `Internasjonal tittel`,
            issn = `Print ISSN`,
-           issn_online = `Online ISSN` )
+           issn_online = `Online ISSN`)
 
 
   suppressWarnings(
@@ -30,7 +31,8 @@ transpose_norwegian_list <- function(journals_file, publishers_file) {
   publishers <- read_delim(publishers_file,
                            delim = ";",
                            show_col_types = FALSE) |>
-    mutate(across(starts_with("Nivå"), as.character)) |>
+    mutate(across(starts_with("Nivå"), as.character),
+           across(ends_with("tittel"), trimws)) |>
     dplyr::rename(Title_original = `Original tittel`,
            Title_international = `Internasjonal tittel`,
            isbn_prefix = `ISBN-prefiks`)
