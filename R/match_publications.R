@@ -219,7 +219,8 @@ match_diva_issn <- function(journals, publications, closest_if_missing = FALSE){
     mutate(matched = "SeriesEISSN")
 
   bind_rows(issn_issn, issn_issne, issne_issne, issne_issn,
-            sissn_issn, sissn_issne, sissne_issne, sissne_issn)
+            sissn_issn, sissn_issne, sissne_issne, sissne_issn) |>
+    distinct()
 }
 
 #' Match DiVA publications with Norwegian List journals by title
@@ -236,7 +237,7 @@ match_diva_journal <- function(journals, publications, closest_if_missing = FALS
            title_int = clean_title(Title_international))
 
   pubs_match <- publications |>
-    filter(!is.na(coalesce(Journal, Series, seriesPublication))) |>
+    filter(!is.na(coalesce(Journal, Series, HostPublication))) |>
     mutate(title = clean_title(Journal),
            stitle = clean_title(Series),
            htitle = clean_title(HostPublication))
@@ -366,7 +367,8 @@ match_diva_journal <- function(journals, publications, closest_if_missing = FALS
     filter(!is.na(Level)) |>
     mutate(matched = "HostPublication")
 
-  bind_rows(title_title, title_int, series_title, series_int, host_title, host_int)
+  bind_rows(title_title, title_int, series_title, series_int, host_title, host_int) |>
+    distinct()
 }
 
 #' Match DiVA publications with Norwegian List journals by conference
@@ -459,7 +461,7 @@ match_diva_conference <- function(journals, publications, closest_if_missing = F
   pids <- setdiff(pids, host_extra$PID)
 
   host_int_extra <- pubs_match |>
-    filter(!is.na(host_extra, PID %in% pids), ) |>
+    filter(!is.na(host_extra), PID %in% pids) |>
     inner_join(journals_match, by = c("host_extra" = "title_int_extra", "Year")) |>
     select(PID, Level)
 
@@ -480,7 +482,7 @@ match_diva_conference <- function(journals, publications, closest_if_missing = F
   pids <- setdiff(pids, host_int_extra$PID)
 
   series_title <- pubs_match |>
-    filter(!is.na(series)) |>
+    filter(!is.na(series), PID %in% pids) |>
     inner_join(journals_match, by = c("series" = "title", "Year")) |>
     select(PID, Level)
 
@@ -543,7 +545,7 @@ match_diva_conference <- function(journals, publications, closest_if_missing = F
   pids <- setdiff(pids, series_extra$PID)
 
   series_int_extra <- pubs_match |>
-    filter(!is.na(series_extra, PID %in% pids), ) |>
+    filter(!is.na(series_extra), PID %in% pids) |>
     inner_join(journals_match, by = c("series_extra" = "title_int_extra", "Year")) |>
     select(PID, Level)
 
@@ -564,7 +566,7 @@ match_diva_conference <- function(journals, publications, closest_if_missing = F
   pids <- setdiff(pids, series_int_extra$PID)
 
   conf_title <- pubs_match |>
-    filter(!is.na(conf)) |>
+    filter(!is.na(conf), PID %in% pids) |>
     inner_join(journals_match, by = c("conf" = "title", "Year")) |>
     select(PID, Level)
 
@@ -627,7 +629,7 @@ match_diva_conference <- function(journals, publications, closest_if_missing = F
   pids <- setdiff(pids, conf_extra$PID)
 
   conf_int_extra <- pubs_match |>
-    filter(!is.na(conf_extra, PID %in% pids), ) |>
+    filter(!is.na(conf_extra), PID %in% pids) |>
     inner_join(journals_match, by = c("conf_extra" = "title_int_extra", "Year")) |>
     select(PID, Level)
 
@@ -647,5 +649,6 @@ match_diva_conference <- function(journals, publications, closest_if_missing = F
 
   bind_rows(host_title, host_int, host_extra, host_int_extra,
             series_title, series_int, series_extra, series_int_extra,
-            conf_title, conf_int, conf_extra, conf_int_extra)
+            conf_title, conf_int, conf_extra, conf_int_extra) |>
+    distinct()
 }

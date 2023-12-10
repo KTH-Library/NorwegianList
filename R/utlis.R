@@ -6,11 +6,13 @@ clean_issn <- function(x) trimws(tolower((gsub("[^0-9xX]", "", x))))
 clean_title <- function(title) {
 
   title |>
-    # & -> and
+    # Switch "&" to "and"
     subg("&amp;", "and") |>
     subg(" & ", " and ") |>
     # Remove trailing volume like chars
-    subg("[;:][0-9 ]+$") |>
+    subg("[;:][0-9 ]+$", "") |>
+    # Remove tags like "<em>", "<sup>" etc
+    subg("<[^>]*>", "") |>
     # Make lowcase and remove leading/trailing whitespace
     tolower() |>
     trimws()
@@ -23,7 +25,7 @@ clean_conference <- function(conference) {
   date_regex2 <- sprintf("(%s) [-0-9, ]*", paste(month.name, collapse = "|"))
 
   clean_title(conference) |>
-    subg("Proceedings of the ", "") |>
+    subg("[Pp]roceedings of the ", "") |>
     # Remove dates
     subg(paste0(date_regex1, " (to|through) ", date_regex1), "") |>
     subg(date_regex1, "") |>
