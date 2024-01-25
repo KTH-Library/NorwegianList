@@ -3,8 +3,9 @@
 #' @param pubs publication list to match
 #' @param norlist Norwegian list to match
 #' @param matchpubs field to match on from pubs, default issn
-#' @import dplyr
 #' @param matchlist field to match on from list, default issn
+#' @import dplyr
+#' @export
 get_closest <- function(pubs, norlist, matchpubs = "issn", matchlist = "issn") {
 
   pubs_work <- pubs |>
@@ -24,7 +25,7 @@ get_closest <- function(pubs, norlist, matchpubs = "issn", matchlist = "issn") {
                                list_year - pub_year + 0.5, # Add 0.5 to prefer earlier match if equal distance
                                pub_year - list_year)) |>
     group_by(PID) |>
-    mutate(rank = rank(desc(diff_year))) |>
+    mutate(rank = rank(diff_year)) |>
     filter(rank == 1) |>
     select(PID, Level, list_year) |>
     ungroup()
@@ -651,4 +652,109 @@ match_diva_conference <- function(journals, publications, closest_if_missing = F
             series_title, series_int, series_extra, series_int_extra,
             conf_title, conf_int, conf_extra, conf_int_extra) |>
     distinct()
+}
+
+
+#' Match DiVA publications with Norwegian List publisher
+#'
+#' @param publishers list of publisher levels
+#' @param publications publication list from DiVA
+#' @param closest_if_missing set to TRUE to try closest year if level is missing
+#' @import dplyr
+#' @export
+match_diva_publisher <- function(publishers, publications, closest_if_missing = FALSE) {
+  publisher_match <- publishers |>
+    mutate(title = clean_title(Title_original),
+           title_int = clean_title(Title_international))
+
+  pubs_match <- publications |>
+    filter(!is.na(Publisher)) |>
+    mutate(publisher = clean_title(Publisher))
+
+  publisher_isbn <- publishers |>
+    filter(!is.na(isbn_prefix)) |>
+    separate_identificator(keep = c("forlag_id", "Year", "Level"),
+                                    identificator = "isbn_prefix",
+                                    sep = ", ") |>
+    distinct()
+
+  pubs_isbn <- publications |>
+    filter(!is.na(ISBN)) |>
+    separate_identificator(keep = c("PID", "Year"),
+                           identificator = "ISBN",
+                           sep = ";") |>
+    mutate(isbn_prefix = isbn_prefix(ISBN)) |>
+    select(PID, Year, isbn_prefix) |>
+    distinct()
+
+  pids <- pubs_match$PID
+
+  publ_title <- pubs_match |>
+    filter(!is.na(publisher)) |>
+    inner_join(publisher_match, by = c("publisher" = "title", "Year")) |>
+    select(PID, Level) |>
+    distinct()
+
+  if(closest_if_missing){
+    pids_na <- publ_title |> filter(is.na(Level)) |> pull(PID)
+    pubs_na <- pubs_match |> filter(PID %in% pids_na)
+    publisher_na <- publisher_match |> filter(title %in% pubs_na$publisher)
+    closest <- get_closest(pubs_na, publisher_na, "publisher", "title") |>
+      distinct()
+    publ_title <- publ_title |>
+      filter(!PID %in% closest$PID) |>
+      bind_rows(closest)
+  }
+
+  publ_title <- publ_title |>
+    filter(!is.na(Level))|>
+    mutate(matched = "Publisher")
+
+  pids <- setdiff(pids, publ_title$PID)
+
+  publ_int <- pubs_match |>
+    filter(!is.na(publisher), PID %in% pids) |>
+    inner_join(publisher_match, by = c("publisher" = "title_int", "Year")) |>
+    select(PID, Level) |>
+    distinct()
+
+  if(closest_if_missing){
+    pids_na <- publ_int |> filter(is.na(Level)) |> pull(PID)
+    pubs_na <- pubs_match |> filter(PID %in% pids_na)
+    publisher_na <- publisher_match |> filter(title_int %in% pubs_na$publisher)
+    closest <- get_closest(pubs_na, publisher_na, "publisher", "title_int") |>
+      distinct()
+    publ_int <- publ_int |>
+      filter(!PID %in% closest$PID) |>
+      bind_rows(closest)
+  }
+
+  publ_int <- publ_int |>
+    filter(!is.na(Level))|>
+    mutate(matched = "Publisher")
+
+  pids <- setdiff(pids, publ_int$PID)
+
+  publ_isbn <- pubs_isbn |>
+    filter(PID %in% pids) |>
+    inner_join(publisher_isbn, by = c("isbn_prefix", "Year")) |>
+    select(PID, Level) |>
+    distinct()
+
+  if(closest_if_missing){
+    pids_na <- publ_isbn |> filter(is.na(Level)) |> pull(PID)
+    pubs_na <- pubs_isbn |> filter(PID %in% pids_na)
+    publisher_na <- publisher_isbn |> filter(isbn_prefix %in% pubs_na$isbn_prerix)
+    closest <- get_closest(pubs_na, publisher_na, "isbn_prefix", "isbn_prefix") |>
+      distinct()
+    publ_isbn <- publ_isbn |>
+      filter(!PID %in% closest$PID) |>
+      bind_rows(closest)
+  }
+
+  publ_isbn <- publ_isbn |>
+    filter(!is.na(Level))|>
+    mutate(matched = "ISBN")
+
+  bind_rows(publ_title, publ_int, publ_isbn)
 }
