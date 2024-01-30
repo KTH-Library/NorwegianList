@@ -4,7 +4,7 @@
 #' @import dplyr tidyr readr
 #' @returns tibble
 #' @export
-transpose_norwegian_list <- function(journals_file) {
+transpose_journals_list <- function(journals_file) {
 
   read_delim(journals_file,
            delim = ";",
@@ -33,7 +33,7 @@ transpose_norwegian_list <- function(journals_file) {
 #' @import dplyr tidyr readr
 #' @returns tibble
 #' @export
-transpose_norwegian_list <- function(publishers_file) {
+transpose_publishers_list <- function(publishers_file) {
 
   publishers <- read_delim(publishers_file,
                            delim = ";",
