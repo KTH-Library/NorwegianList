@@ -6,33 +6,31 @@
 #' @export
 transpose_journals_list <- function(journals_file) {
 
-  colnames <- read.table(journals_file, header = F, nrows = 1, sep = ";") |> as.character()
+  colnames <- read_delim(journals_file, col_names = F, n_max = 1, delim = ";", show_col_types = FALSE) |> as.character()
 
   readcols <- colnames[which(colnames %in% c("tidsskrift_id",
                                              "Original tittel",
                                              "Internasjonal tittel",
                                              "Print ISSN",
                                              "Online ISSN") |
-                               grepl("Nivå", colnames))]
+                               grepl("Niv\u00E5", colnames))]
 
 
-  coltypes <- c("i", rep("c", length(readcols) - 1))
+  coltypes <- paste(c("i", rep("c", length(colnames)-1)), collapse = "")
 
   read_delim(journals_file,
              delim = ";",
              trim_ws = TRUE,
              col_select = all_of(readcols),
              col_types = coltypes) |>
-    mutate(across(starts_with("Nivå"), as.character),
-           across(ends_with("tittel"), trimws)) |>
-    dplyr::rename(Title_original = `Original tittel`,
-                  Title_international = `Internasjonal tittel`,
-                  issn = `Print ISSN`,
-                  issn_online = `Online ISSN`) |>
-    pivot_longer(starts_with("Nivå"),
+    pivot_longer(starts_with("Niv\u00E5"),
                  names_to = "Year") |>
-    mutate(Year = as.integer(gsub("Nivå ", "", Year))) |>
-    rename(Level = value)
+    mutate(Year = as.integer(gsub("Niv\u00E5 ", "", Year))) |>
+    rename(Title_original = `Original tittel`,
+           Title_international = `Internasjonal tittel`,
+           issn = `Print ISSN`,
+           issn_online = `Online ISSN`,
+           Level = value)
 }
 
 #' Transpose Norwegian publishers list
@@ -43,31 +41,28 @@ transpose_journals_list <- function(journals_file) {
 #' @export
 transpose_publishers_list <- function(publishers_file) {
 
-
-  colnames <- read.table(publishers_file, header = F, nrows = 1, sep = ";") |> as.character()
+  colnames <- read_delim(publishers_file, col_names = F, n_max = 1, delim = ";", show_col_types = FALSE) |> as.character()
 
   readcols <- colnames[which(colnames %in% c("forlag_id",
                                              "Original tittel",
                                              "Internasjonal tittel",
                                              "ISBN-prefiks") |
-                               grepl("Nivå", colnames))]
+                               grepl("Niv\u00E5", colnames))]
 
-  coltypes <- c("i", rep("c", length(readcols) - 1))
+  coltypes <- paste(c("i", rep("c", length(colnames)-1)), collapse = "")
 
   read_delim(publishers_file,
-        delim = ";",
-        trim_ws = TRUE,
-        col_select = all_of(readcols),
-        col_types = coltypes) |>
-    mutate(across(starts_with("Nivå"), as.character),
-           across(ends_with("tittel"), trimws)) |>
-    dplyr::rename(Title_original = `Original tittel`,
-                  Title_international = `Internasjonal tittel`,
-                  isbn_prefix = `ISBN-prefiks`) |>
-      pivot_longer(starts_with("Nivå"),
-                   names_to = "Year") |>
-      mutate(Year = as.integer(gsub("Nivå ", "", Year))) |>
-      rename(Level = value)
+             delim = ";",
+             trim_ws = TRUE,
+             col_select = all_of(readcols),
+             col_types = coltypes) |>
+    pivot_longer(starts_with("Niv\u00E5"),
+                 names_to = "Year") |>
+    mutate(Year = as.integer(gsub("Niv\u00E5 ", "", Year))) |>
+    rename(Title_original = `Original tittel`,
+           Title_international = `Internasjonal tittel`,
+           isbn_prefix = `ISBN-prefiks`,
+           Level = value)
 }
 
 #' Transpose Norwegian lists of publication channels
