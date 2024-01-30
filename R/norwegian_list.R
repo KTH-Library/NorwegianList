@@ -6,25 +6,33 @@
 #' @export
 transpose_journals_list <- function(journals_file) {
 
-  read_delim(journals_file,
-           delim = ";",
-           show_col_types = FALSE) |>
-  mutate(across(starts_with("Nivå"), as.character),
-         across(ends_with("tittel"), trimws)) |>
-  dplyr::rename(Title_original = `Original tittel`,
-                Title_international = `Internasjonal tittel`,
-                issn = `Print ISSN`,
-                issn_online = `Online ISSN`)
+  colnames <- read.table(journals_file, header = F, nrows = 1, sep = ";") |> as.character()
 
-  suppressWarnings(
-    journals |>
-      select(tidsskrift_id:issn_online, starts_with("Nivå")) |>
-      pivot_longer(starts_with("Nivå"),
-                   names_to = "Year") |>
-      mutate(Year = as.integer(gsub("Nivå ", "", Year)),
-             Level = if_else(value %in% c(0, 1, 2), as.integer(value), NA_integer_)) |>
-      select(-value)
-  )
+  readcols <- colnames[which(colnames %in% c("tidsskrift_id",
+                                             "Original tittel",
+                                             "Internasjonal tittel",
+                                             "Print ISSN",
+                                             "Online ISSN") |
+                               grepl("Nivå", colnames))]
+
+
+  coltypes <- c("i", rep("c", length(readcols) - 1))
+
+  read_delim(journals_file,
+             delim = ";",
+             trim_ws = TRUE,
+             col_select = all_of(readcols),
+             col_types = coltypes) |>
+    mutate(across(starts_with("Nivå"), as.character),
+           across(ends_with("tittel"), trimws)) |>
+    dplyr::rename(Title_original = `Original tittel`,
+                  Title_international = `Internasjonal tittel`,
+                  issn = `Print ISSN`,
+                  issn_online = `Online ISSN`) |>
+    pivot_longer(starts_with("Nivå"),
+                 names_to = "Year") |>
+    mutate(Year = as.integer(gsub("Nivå ", "", Year))) |>
+    rename(Level = value)
 }
 
 #' Transpose Norwegian publishers list
@@ -35,24 +43,31 @@ transpose_journals_list <- function(journals_file) {
 #' @export
 transpose_publishers_list <- function(publishers_file) {
 
-  publishers <- read_delim(publishers_file,
-                           delim = ";",
-                           show_col_types = FALSE) |>
+
+  colnames <- read.table(publishers_file, header = F, nrows = 1, sep = ";") |> as.character()
+
+  readcols <- colnames[which(colnames %in% c("forlag_id",
+                                             "Original tittel",
+                                             "Internasjonal tittel",
+                                             "ISBN-prefiks") |
+                               grepl("Nivå", colnames))]
+
+  coltypes <- c("i", rep("c", length(readcols) - 1))
+
+  read_delim(publishers_file,
+        delim = ";",
+        trim_ws = TRUE,
+        col_select = all_of(readcols),
+        col_types = coltypes) |>
     mutate(across(starts_with("Nivå"), as.character),
            across(ends_with("tittel"), trimws)) |>
     dplyr::rename(Title_original = `Original tittel`,
                   Title_international = `Internasjonal tittel`,
-                  isbn_prefix = `ISBN-prefiks`)
-
-  suppressWarnings(
-    publishers |>
-      select(forlag_id:isbn_prefix, starts_with("Nivå")) |>
+                  isbn_prefix = `ISBN-prefiks`) |>
       pivot_longer(starts_with("Nivå"),
                    names_to = "Year") |>
-      mutate(Year = as.integer(gsub("Nivå ", "", Year)),
-             Level = if_else(value %in% c(0, 1, 2), as.integer(value), NA_integer_)) |>
-      select(-value)
-  )
+      mutate(Year = as.integer(gsub("Nivå ", "", Year))) |>
+      rename(Level = value)
 }
 
 #' Transpose Norwegian lists of publication channels
@@ -64,12 +79,8 @@ transpose_publishers_list <- function(publishers_file) {
 #' @export
 transpose_norwegian_list <- function(journals_file, publishers_file) {
 
-  journals <- transpose_journals_list(journals_file)
-
-  publishers <- transpose_publishers_list(publishers_file)
-
-  list(journals = journals_transposed,
-       publishers = publishers_transposed)
+  list(journals = transpose_journals_list(journals_file),
+       publishers =  transpose_publishers_list(publishers_file))
 }
 
 #' Write csv files norwegian_journals, norwegian_publishers
